@@ -19,11 +19,14 @@
           </v-card-item>
 
           <v-card-actions>
-            <v-btn>
+            <v-btn @click="iniciarSesion">
               Entrar
             </v-btn>
             <v-btn @click="botonRegistrar">
               Register
+            </v-btn>
+            <v-btn @click="iniciarSesionConGoogle">
+              <span class="mdi mdi-google"></span> oogle
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -66,9 +69,10 @@
 </template>
 
 <script setup>
-import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification,signInWithEmailAndPassword,signInWithPopup,GoogleAuthProvider  } from 'firebase/auth';
 import { ref } from 'vue';
 import { auth } from '@/firebase';
+import { useStore } from 'vuex';
 //variables reactivas
 const login = ref(true);
 const register = ref(false);
@@ -80,6 +84,7 @@ const correoR = ref('');
 const correo = ref('');
 const passwordRD = ref('');
 //variables normales
+const store = useStore();
 const botonRegistrar = () => {
   if (login.value == true) {
     login.value = false;
@@ -97,6 +102,7 @@ if(esCorreoElectronicoValido(correoR.value)&& userNameR.value !=""&& passwordR.v
 }
 };
 
+
 //funciones
 function esCorreoElectronicoValido(correo) {
   // Lógica de validación para correo electrónico (por ejemplo)
@@ -109,12 +115,17 @@ async function  registro(){
     // Usuario registrado correctamente
     const user = userCredential.user;
     console.log('Usuario registrado:', user);
-
+    await updateProfile(user, { displayName: userNameR.value });
     // Envía un correo electrónico de verificación
     await sendEmailVerification(user);
 
     // Correo electrónico de verificación enviado
     console.log('Correo de verificación enviado.');
+    correoR.value="";
+    passwordR.value="";
+    passwordRD.value="";
+    register.value=false;
+    login.value=true;
   } catch (error) {
     // Manejar errores de registro
     const errorCode = error.code;
@@ -123,5 +134,26 @@ async function  registro(){
   }
 
 };
-
+async function iniciarSesion(){
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, correo.value, password.value);
+    const user = userCredential.user;
+    console.log('Usuario autenticado:', user);
+    store.dispatch('setUsuario', user);
+  } catch (error) {
+    console.error('Error al iniciar sesión:', error);
+  }
+}
+async function iniciarSesionConGoogle (){
+  try {
+    const provider = new GoogleAuthProvider();
+    const userCredential = await signInWithPopup(auth, provider);
+    const user = userCredential.user;
+    console.log('Usuario autenticado con Google.');
+    store.dispatch('setUsuario', user);
+    console.log('Usuario almacenado en la store:', store.state.user.usuario);
+  } catch (error) {
+    console.error('Error al iniciar sesión con Google:', error);
+  }
+};
 </script>
