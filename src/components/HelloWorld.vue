@@ -45,14 +45,14 @@
               <v-container>
                 <v-text-field v-model="correoR" :rules="rules" label="Correo"></v-text-field>
                 <v-text-field v-model="userNameR" :rules="rules" label="Nombre de usuario"></v-text-field>
-                <v-text-field v-model="passwordR" :rules="rules" label="Password"></v-text-field>
-                <v-text-field v-model="passwordRD" :rules="rules" label="Password"></v-text-field>
+                <v-text-field type="password" v-model="passwordR" :rules="rules" label="Password"></v-text-field>
+                <v-text-field type="password" v-model="passwordRD" :rules="rules" label="Password"></v-text-field>
               </v-container>
             </div>
           </v-card-item>
 
           <v-card-actions>
-            <v-btn>
+            <v-btn :disabled="!rulesR()" @click="registro">
               Registrar
             </v-btn>
             <v-btn @click="botonRegistrar">
@@ -66,7 +66,9 @@
 </template>
 
 <script setup>
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { ref } from 'vue';
+import { auth } from '@/firebase';
 //variables reactivas
 const login = ref(true);
 const register = ref(false);
@@ -89,4 +91,37 @@ const botonRegistrar = () => {
 
   console.log(login.value)
 };
+const rulesR = ()=>{
+if(esCorreoElectronicoValido(correoR.value)&& userNameR.value !=""&& passwordR.value!=""&& passwordR.value == passwordRD.value){
+  return true;
+}
+};
+
+//funciones
+function esCorreoElectronicoValido(correo) {
+  // Lógica de validación para correo electrónico (por ejemplo)
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
+};
+async function  registro(){
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, correoR.value, passwordR.value);
+
+    // Usuario registrado correctamente
+    const user = userCredential.user;
+    console.log('Usuario registrado:', user);
+
+    // Envía un correo electrónico de verificación
+    await sendEmailVerification(user);
+
+    // Correo electrónico de verificación enviado
+    console.log('Correo de verificación enviado.');
+  } catch (error) {
+    // Manejar errores de registro
+    const errorCode = error.code;
+    const errorMessage = error.message;
+    console.error('Error al registrar usuario:', errorCode, errorMessage);
+  }
+
+};
+
 </script>
