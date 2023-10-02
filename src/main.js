@@ -6,7 +6,7 @@
 
 // Components
 import App from './App.vue'
- 
+import router from './router';
 // Composables
 import { createApp } from 'vue'
 
@@ -15,6 +15,7 @@ import { createStore } from 'vuex';
 import { registerPlugins } from '@/plugins'
 import userModule from './store/user.js';
 const app = createApp(App)
+app.use(router);
 const store = createStore({
     modules: {
       user: userModule,

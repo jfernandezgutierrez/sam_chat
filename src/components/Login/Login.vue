@@ -71,6 +71,7 @@
 <script setup>
 import { createUserWithEmailAndPassword, sendEmailVerification,signInWithEmailAndPassword,signInWithPopup,GoogleAuthProvider  } from 'firebase/auth';
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { auth } from '@/firebase';
 import { useStore } from 'vuex';
 //variables reactivas
@@ -84,7 +85,16 @@ const correoR = ref('');
 const correo = ref('');
 const passwordRD = ref('');
 //variables normales
+const router = useRouter();
 const store = useStore();
+const redirectToChat = () => {
+  router.push({ name: 'Chat' }).catch(err => {
+    if (err.name !== 'NavigationDuplicated') {
+      throw err;
+    }
+  });
+};
+
 const botonRegistrar = () => {
   if (login.value == true) {
     login.value = false;
@@ -140,6 +150,7 @@ async function iniciarSesion(){
     const user = userCredential.user;
     console.log('Usuario autenticado:', user);
     store.dispatch('setUsuario', user);
+    redirectToChat()
   } catch (error) {
     console.error('Error al iniciar sesión:', error);
   }
@@ -152,6 +163,7 @@ async function iniciarSesionConGoogle (){
     console.log('Usuario autenticado con Google.');
     store.dispatch('setUsuario', user);
     console.log('Usuario almacenado en la store:', store.state.user.usuario);
+    redirectToChat()
   } catch (error) {
     console.error('Error al iniciar sesión con Google:', error);
   }
