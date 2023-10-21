@@ -69,7 +69,8 @@
 </template>
 
 <script setup>
-import { createUserWithEmailAndPassword, sendEmailVerification,signInWithEmailAndPassword,signInWithPopup,GoogleAuthProvider  } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification,signInWithEmailAndPassword,signInWithPopup,GoogleAuthProvider,updateProfile   } from 'firebase/auth';
+import { getFirestore, collection, addDoc } from "firebase/firestore";
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { auth } from '@/firebase';
@@ -85,6 +86,8 @@ const correoR = ref('');
 const correo = ref('');
 const passwordRD = ref('');
 //variables normales
+const db = getFirestore();
+const usuariosCollection = collection(db, "usuarios");
 const router = useRouter();
 const store = useStore();
 const redirectToChat = () => {
@@ -131,6 +134,12 @@ async function  registro(){
 
     // Correo electrónico de verificación enviado
     console.log('Correo de verificación enviado.');
+     await addDoc(usuariosCollection, {
+      uid: user.uid,
+      email: user.email,
+      displayName: userNameR.value,
+      // Otros campos que desees guardar en la base de datos
+    });
     correoR.value="";
     passwordR.value="";
     passwordRD.value="";
@@ -162,7 +171,13 @@ async function iniciarSesionConGoogle (){
     const user = userCredential.user;
     console.log('Usuario autenticado con Google.');
     store.dispatch('setUsuario', user);
-    console.log('Usuario almacenado en la store:', store.state.user.usuario);
+    console.log('Usuario almacenado en la store:', user);
+    await addDoc(usuariosCollection, {
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName,
+      // Otros campos que desees guardar en la base de datos
+    });
     redirectToChat()
   } catch (error) {
     console.error('Error al iniciar sesión con Google:', error);
